@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gestion_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - gestion_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gestion_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/uploads:/app/uploads
+      - /app/node_modules
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - gestion_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gestion_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:4000/api}
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - gestion_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gestion_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gestion_network
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: gestion_uptime_kuma
+    restart: unless-stopped
+    volumes:
+      - uptime_kuma_data:/app/data
+    ports:
+      - "3001:3001"
+    depends_on:
+      - frontend
+      - backend
+      - postgres
+    networks:
+      - gestion_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  uptime_kuma_data:
+
+networks:
+  gestion_network:
+    driver: bridge
