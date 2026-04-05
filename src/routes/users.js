@@ -19,7 +19,7 @@ const auditLog = require('../middleware/audit');
  *       403:
  *         description: Forbidden
  */
-router.get('/', authenticate, authorize('admin'), userController.list);
+router.get('/', authenticate, authorize('admin'), userController.getAll);
 
 /**
  * @swagger
@@ -36,16 +36,22 @@ router.get('/', authenticate, authorize('admin'), userController.list);
  *           schema:
  *             type: object
  *             required:
+ *               - username
  *               - email
  *               - password
- *               - role
+ *               - first_name
+ *               - last_name
  *             properties:
+ *               username:
+ *                 type: string
  *               email:
  *                 type: string
- *                 example: user@example.com
  *               password:
  *                 type: string
- *                 example: securepassword
+ *               first_name:
+ *                 type: string
+ *               last_name:
+ *                 type: string
  *               role:
  *                 type: string
  *                 enum: [admin, supervisor, operator, accountant]
@@ -99,6 +105,6 @@ router.put('/:id', authenticate, authorize('admin'), auditLog('UPDATE', 'User'),
  *       403:
  *         description: Forbidden
  */
-router.delete('/:id', authenticate, authorize('admin'), auditLog('DELETE', 'User'), userController.remove);
+router.delete('/:id', authenticate, authorize('admin'), auditLog('DELETE', 'User'), userController.delete);
 
 module.exports = router;
