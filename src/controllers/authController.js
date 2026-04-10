@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwt');
 const { User, AuditLog } = require('../models');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
 
 exports.login = async (req, res) => {
   try {
@@ -11,25 +12,18 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
     }
 
-    const user = await User.findOne({ 
-      where: { 
-        [Op.or]: [
-          { username: username },
-          { email: username }
-        ]
-      } 
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [{ username }, { email: username }],
+      },
     });
-    if (!user) {
+
+    if (!user || !(await user.validatePassword(password))) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     if (!user.active) {
       return res.status(403).json({ error: 'Cuenta desactivada. Contacte al administrador.' });
-    }
-
-    const isValidPassword = await user.validatePassword(password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const accessToken = jwt.sign(
@@ -44,10 +38,8 @@ exports.login = async (req, res) => {
       { expiresIn: jwtConfig.refreshExpiration }
     );
 
-    // Save refresh token
     await user.update({ refresh_token: refreshToken, last_login: new Date() });
 
-    // Audit log
     await AuditLog.create({
       user_id: user.id,
       username: user.username,
@@ -62,7 +54,7 @@ exports.login = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error', { error: error.message });
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
@@ -122,7 +114,7 @@ exports.logout = async (req, res) => {
 
     res.json({ message: 'Sesión cerrada exitosamente' });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error('Logout error', { error: error.message });
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

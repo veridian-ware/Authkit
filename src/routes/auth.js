@@ -3,6 +3,8 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const authenticate = require('../middleware/auth');
 const auditLog = require('../middleware/audit');
+const validate = require('../middleware/validate');
+const { loginValidator, refreshValidator } = require('../middleware/validators/authValidators');
 
 /**
  * @swagger
@@ -17,10 +19,10 @@ const auditLog = require('../middleware/audit');
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - username
  *               - password
  *             properties:
- *               email:
+ *               username:
  *                 type: string
  *                 example: admin@authkit.dev
  *               password:
@@ -29,10 +31,14 @@ const auditLog = require('../middleware/audit');
  *     responses:
  *       200:
  *         description: Login successful, returns access and refresh tokens
+ *       400:
+ *         description: Validation error
  *       401:
  *         description: Invalid credentials
+ *       429:
+ *         description: Too many requests
  */
-router.post('/login', authController.login);
+router.post('/login', loginValidator, validate, authController.login);
 
 /**
  * @swagger
@@ -55,10 +61,12 @@ router.post('/login', authController.login);
  *     responses:
  *       200:
  *         description: Returns a new access token
+ *       400:
+ *         description: Validation error
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post('/refresh', authController.refresh);
+router.post('/refresh', refreshValidator, validate, authController.refresh);
 
 /**
  * @swagger

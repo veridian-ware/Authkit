@@ -4,6 +4,8 @@ const userController = require('../controllers/userController');
 const authenticate = require('../middleware/auth');
 const authorize = require('../middleware/roles');
 const auditLog = require('../middleware/audit');
+const validate = require('../middleware/validate');
+const { createUserValidator, updateUserValidator, listUsersValidator } = require('../middleware/validators/userValidators');
 
 /**
  * @swagger
@@ -13,13 +15,31 @@ const auditLog = require('../middleware/audit');
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [admin, supervisor, operario, contador]
  *     responses:
  *       200:
  *         description: Returns list of users
  *       403:
  *         description: Forbidden
  */
-router.get('/', authenticate, authorize('admin'), userController.getAll);
+router.get('/', authenticate, authorize('admin'), listUsersValidator, validate, userController.getAll);
 
 /**
  * @swagger
@@ -54,14 +74,18 @@ router.get('/', authenticate, authorize('admin'), userController.getAll);
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [admin, supervisor, operator, accountant]
+ *                 enum: [admin, supervisor, operario, contador]
  *     responses:
  *       201:
  *         description: User created successfully
+ *       400:
+ *         description: Validation error
  *       403:
  *         description: Forbidden
+ *       409:
+ *         description: Username or email already exists
  */
-router.post('/', authenticate, authorize('admin'), auditLog('CREATE', 'User'), userController.create);
+router.post('/', authenticate, authorize('admin'), auditLog('CREATE', 'User'), createUserValidator, validate, userController.create);
 
 /**
  * @swagger
@@ -80,10 +104,14 @@ router.post('/', authenticate, authorize('admin'), auditLog('CREATE', 'User'), u
  *     responses:
  *       200:
  *         description: User updated successfully
+ *       400:
+ *         description: Validation error
  *       403:
  *         description: Forbidden
+ *       404:
+ *         description: User not found
  */
-router.put('/:id', authenticate, authorize('admin'), auditLog('UPDATE', 'User'), userController.update);
+router.put('/:id', authenticate, authorize('admin'), auditLog('UPDATE', 'User'), updateUserValidator, validate, userController.update);
 
 /**
  * @swagger
@@ -104,6 +132,8 @@ router.put('/:id', authenticate, authorize('admin'), auditLog('UPDATE', 'User'),
  *         description: User deactivated successfully
  *       403:
  *         description: Forbidden
+ *       404:
+ *         description: User not found
  */
 router.delete('/:id', authenticate, authorize('admin'), auditLog('DELETE', 'User'), userController.delete);
 

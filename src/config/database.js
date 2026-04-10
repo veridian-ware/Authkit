@@ -14,9 +14,9 @@ const sequelize = process.env.DATABASE_URL
       define: { timestamps: true, underscored: true },
     })
   : new Sequelize(
-      process.env.POSTGRES_DB || 'gestion_empresarial',
-      process.env.POSTGRES_USER || 'gestion_admin',
-      process.env.POSTGRES_PASSWORD || 'gestion_dev_2024',
+      process.env.POSTGRES_DB || 'authkit_db',
+      process.env.POSTGRES_USER || '',
+      process.env.POSTGRES_PASSWORD || '',
       {
         host: process.env.POSTGRES_HOST || 'localhost',
         port: parseInt(process.env.POSTGRES_PORT || '5432'),

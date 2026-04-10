@@ -1,5 +1,6 @@
 const { User } = require('../models');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
 
 exports.getAll = async (req, res) => {
   try {
@@ -18,7 +19,7 @@ exports.getAll = async (req, res) => {
     if (role) where.role = role;
     if (active !== undefined) where.active = active === 'true';
 
-    // Supervisor ABAC Security
+    // Supervisor ABAC: can only see users in their area
     if (req.user && req.user.role !== 'admin') {
       where.area = req.user.area;
     }
@@ -38,7 +39,7 @@ exports.getAll = async (req, res) => {
       totalPages: Math.ceil(count / limit),
     });
   } catch (error) {
-    console.error('Get users error:', error);
+    logger.error('Get users error', { error: error.message });
     res.status(500).json({ error: 'Error al obtener usuarios' });
   }
 };
@@ -55,7 +56,7 @@ exports.getById = async (req, res) => {
 
     res.json({ user });
   } catch (error) {
-    console.error('Get user error:', error);
+    logger.error('Get user error', { error: error.message });
     res.status(500).json({ error: 'Error al obtener usuario' });
   }
 };
@@ -63,10 +64,6 @@ exports.getById = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { username, email, password, first_name, last_name, role, area } = req.body;
-
-    if (!username || !email || !password || !first_name || !last_name) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-    }
 
     const existing = await User.findOne({
       where: { [Op.or]: [{ username }, { email }] },
@@ -84,7 +81,7 @@ exports.create = async (req, res) => {
 
     res.status(201).json({ user: user.toSafeJSON(), id: user.id });
   } catch (error) {
-    console.error('Create user error:', error);
+    logger.error('Create user error', { error: error.message });
     if (error.name === 'SequelizeValidationError') {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
@@ -125,7 +122,7 @@ exports.update = async (req, res) => {
 
     res.json({ user: user.toSafeJSON(), id: user.id });
   } catch (error) {
-    console.error('Update user error:', error);
+    logger.error('Update user error', { error: error.message });
     res.status(500).json({ error: 'Error al actualizar usuario' });
   }
 };
@@ -137,12 +134,11 @@ exports.delete = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // Soft delete: deactivate instead of destroying
     await user.update({ active: false });
 
     res.json({ message: 'Usuario desactivado exitosamente', id: user.id });
   } catch (error) {
-    console.error('Delete user error:', error);
+    logger.error('Delete user error', { error: error.message });
     res.status(500).json({ error: 'Error al desactivar usuario' });
   }
 };
