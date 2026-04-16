@@ -45,7 +45,7 @@ AuthKit Express gives you a complete, battle-tested auth layer so you can start 
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/veridian-ware/Authkit.git
+git clone https://github.com/yourusername/authkit-express.git
 cd Authkit
 cp .env.example .env
 ```
@@ -462,4 +462,4 @@ router.get('/', authenticate, authorize('admin', 'supervisor'), listUsers);
 
 ## Soporte
 
-Para consultas o problemas, abrí un issue en GitHub o contactá a [tu email].
+Para consultas o problemas, abrí un issue en GitHub o escribí a veridianware@gmail.com.
