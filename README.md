@@ -286,7 +286,7 @@ router.get('/', authenticate, authorize('admin', 'supervisor'), listUsers);
 
 ## Soporte
 
-Para consultas o problemas, abrí un issue en GitHub o escribí a veridianware@gmail.com.
+Para consultas o problemas, abrí un issue en GitHub o escribí a contacto@veridian-erp.com.ar.
 │   └── create-user.js        # CLI to create first admin
 ├── .env.example
 ├── docker-compose.yml
@@ -462,4 +462,4 @@ router.get('/', authenticate, authorize('admin', 'supervisor'), listUsers);
 
 ## Soporte
 
-Para consultas o problemas, abrí un issue en GitHub o escribí a veridianware@gmail.com.
+Para consultas o problemas, abrí un issue en GitHub o escribí a contacto@veridian-erp.com.ar.
